@@ -15,12 +15,13 @@ use Slim\Routing\RouteContext;
 require __DIR__ . '/../vendor/autoload.php';
 
 require_once './db/AccesoDatos.php';
-// require_once './middlewares/Logger.php';
+require_once './middlewares/ValidacionesMiddleware.php';
 
 require_once './controllers/EmpleadoController.php';
 require_once './controllers/ProductoController.php';
 require_once './controllers/MesaController.php';
 require_once './controllers/PedidoController.php';
+require_once './controllers/VentaController.php';
 
 // Load ENV
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
@@ -39,32 +40,47 @@ $app->addBodyParsingMiddleware();
 $app->setBasePath('/LaComanda/app');
 
 // Routes
-$app->group('/empleados', function (RouteCollectorProxy $group) 
+// $app->group('/empleados', function (RouteCollectorProxy $group) 
+// {
+//   $group->get('[/]', \EmpleadoController::class . ':TraerTodos');
+//   $group->get('/{empleado}', \EmpleadoController::class . ':TraerUno');
+//   $group->post('[/]', \EmpleadoController::class . ':CargarUno');
+// });
+
+// $app->group('/productos', function (RouteCollectorProxy $group) 
+// {
+//   $group->get('[/]', \ProductoController::class . ':TraerTodos');
+//   $group->get('/{producto}', \ProductoController::class . ':TraerUno');
+//   $group->post('[/]', \ProductoController::class . ':CargarUno');
+// });
+
+// $app->group('/mesas', function (RouteCollectorProxy $group) 
+// {
+//   $group->get('[/]', \MesaController::class . ':TraerTodos');
+//   $group->get('/{mesa}', \MesaController::class . ':TraerUno');
+//   $group->post('[/]', \MesaController::class . ':CargarUno');
+// });
+
+// $app->group('/pedidos', function (RouteCollectorProxy $group) 
+// {
+//   $group->get('[/]', \PedidoController::class . ':TraerTodos');
+//   $group->get('/{pedido}', \PedidoController::class . ':TraerUno');
+//   $group->post('[/]', \PedidoController::class . ':CargarUno');
+// });
+
+
+$app->group('/venta', function (RouteCollectorProxy $group) 
 {
-  $group->get('[/]', \EmpleadoController::class . ':TraerTodos');
-  $group->get('/{empleado}', \EmpleadoController::class . ':TraerUno');
-  $group->post('[/]', \EmpleadoController::class . ':CargarUno');
+  $group->post('[/nuevaVenta/]', \VentaController::class . ':NuevaVenta')->add(\ValidacionesMiddleware::class . ':VerificarDatosVenta');
 });
 
-$app->group('/productos', function (RouteCollectorProxy $group) 
+$app->group('/pedido', function (RouteCollectorProxy $group) 
 {
-  $group->get('[/]', \ProductoController::class . ':TraerTodos');
-  $group->get('/{producto}', \ProductoController::class . ':TraerUno');
-  $group->post('[/]', \ProductoController::class . ':CargarUno');
+  $group->post('[/nuevoPedido]', \PedidoController::class . ':CargarUno')->add(\ValidacionesMiddleware::class . ':VerificarDatosPedido');
 });
 
-$app->group('/mesas', function (RouteCollectorProxy $group) 
-{
-  $group->get('[/]', \MesaController::class . ':TraerTodos');
-  $group->get('/{mesa}', \MesaController::class . ':TraerUno');
-  $group->post('[/]', \MesaController::class . ':CargarUno');
-});
 
-$app->group('/pedidos', function (RouteCollectorProxy $group) 
-{
-  $group->get('[/]', \PedidoController::class . ':TraerTodos');
-  $group->get('/{pedido}', \PedidoController::class . ':TraerUno');
-  $group->post('[/]', \PedidoController::class . ':CargarUno');
-});
+
+
 
 $app->run();

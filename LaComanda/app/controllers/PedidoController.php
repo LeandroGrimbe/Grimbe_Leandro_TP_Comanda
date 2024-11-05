@@ -1,23 +1,27 @@
 <?php
 require_once './models/Pedido.php';
+require_once './controllers/ProductoController.php';
 require_once './interfaces/IApiUsable.php';
 
-class PedidoController extends Pedido implements IApiUsable
+class PedidoController extends Pedido //implements IApiUsable
 {
     public function CargarUno($request, $response, $args)
     {
         $parametros = $request->getParsedBody();
 
-        $idMesa = $parametros['idMesa'];
-        $precio = $parametros['precio'];
-        $idEstadoProceso = $parametros['idEstadoProceso'];
+        $nroMesa = $parametros['nroMesa'];
+        $idEstadoProceso = 2;
 
-        // Creamos el pedido
+        $listaIdsProductos = $parametros['listaIdsProductos'];
+        $precio = ProductoController::CalcularPrecio($listaIdsProductos);
+
         $pedido = new Pedido();
-        $pedido->idMesa = $idMesa;
+        $pedido->nroMesa = $nroMesa;
         $pedido->precio = $precio;
         $pedido->idEstadoProceso = $idEstadoProceso;
-        $pedido->crearPedido();
+
+        $idPedido = $pedido->crearPedido();
+        ProductoController::NuevaLista($idPedido, $listaIdsProductos);
 
         $payload = json_encode(array("mensaje" => "Pedido creado con exito"));
 
@@ -28,8 +32,7 @@ class PedidoController extends Pedido implements IApiUsable
 
     public function TraerUno($request, $response, $args)
     {
-        // Buscamos pedido por id
-        $idPedido = $args['pedido'];
+        $idPedido = $args['idPedido'];
         $pedido = Pedido::obtenerPedido($idPedido);
         $payload = json_encode($pedido);
 

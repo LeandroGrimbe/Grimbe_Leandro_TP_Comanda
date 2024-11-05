@@ -9,7 +9,7 @@ CREATE TABLE estados (
     nombre TEXT
 );
 
-CREATE TABLE estadosComida (
+CREATE TABLE estadosMesa (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre TEXT
 );
@@ -35,7 +35,7 @@ INSERT INTO estados (nombre)
 VALUES	("activo"),
 		("inactivo");
         
-INSERT INTO estadosComida (nombre)
+INSERT INTO estadosMesa (nombre)
 VALUES	("cerrada"),
 		("clientes esperando pedido"),
         ("clientes comiendo"),
@@ -52,7 +52,7 @@ VALUES	("barra de tragos"),
         ("cocina"),
         ("candy bar");
 
--------------------------------------------------------------------------
+
 
 CREATE TABLE empleados (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -67,15 +67,17 @@ CREATE TABLE empleados (
 
 CREATE TABLE mesas (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    nombreCliente TEXT,
+    pathFoto TEXT,
+    nroMesa INT(5),
     cuenta DECIMAL(10, 2),
-    idEstadoComida INT(1),
-    FOREIGN KEY(idEstadoComida) REFERENCES estadosComida(id)
+    idEstadoMesa INT(1),
+    FOREIGN KEY(idEstadoMesa) REFERENCES estadosMesa(id)
 );
 
 CREATE TABLE pedidos (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    idMesa INT(1),
-    FOREIGN KEY(idMesa) REFERENCES mesas(id),
+    nroMesa INT(5),
     precio DECIMAL(10, 2),
     idEstadoProceso INT(1),
     FOREIGN KEY(idEstadoProceso) REFERENCES estadosPedido(id)
@@ -86,7 +88,9 @@ CREATE TABLE productos (
     nombre TEXT,
     precio DECIMAL(10, 2),
     idCategoria INT(1),
-    FOREIGN KEY(idCategoria) REFERENCES categorias(id)
+    FOREIGN KEY(idCategoria) REFERENCES categorias(id),
+    idEstado INT(1),
+    FOREIGN KEY(idEstado) REFERENCES estados(id)
 );
 
 CREATE TABLE listaProductos (
@@ -94,8 +98,23 @@ CREATE TABLE listaProductos (
     idPedido INT(1),
     FOREIGN KEY(idPedido) REFERENCES pedidos(id),
     idProducto INT(1),
-    FOREIGN KEY(idProducto) REFERENCES productos(id),
-    cantidad INT(3)
+    FOREIGN KEY(idProducto) REFERENCES productos(id)
+);
+
+CREATE TABLE ventas (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nroMesa INT(5),
+    fecha TEXT,
+    idEstado INT(1),
+    FOREIGN KEY(idEstado) REFERENCES estados(id)
+);
+
+CREATE TABLE listaPedidos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    idPedido INT(1),
+    FOREIGN KEY(idPedido) REFERENCES pedidos(id),
+    idVenta INT(1),
+    FOREIGN KEY(idVenta) REFERENCES ventas(id)
 );
 
 
@@ -104,20 +123,20 @@ VALUES	("pepito", 1, "2024-10-29", "", 1),
 		("jose", 2, "2024-10-15", "", 1),
         ("carlos", 3, "2024-10-22", "", 1);
 
-INSERT INTO mesas (cuenta, idEstadoComida)
-VALUES	(0, 0),
-		(32500, 3),
-        (15000, 4);
+INSERT INTO mesas (nombreCliente, pathFoto, nroMesa, cuenta, idEstadoMesa)
+VALUES	("pepe", "fotos" ,23233, 0, 1),
+		("carlos", "fotos" 23253, 32500, 3),
+        ("juan", "fotos" 23213, 15000, 4);
 
 INSERT INTO pedidos (idMesa, precio, idEstadoProceso)
 VALUES	(1, 0, 1),
         (2, 9200, 2);
 
 INSERT INTO productos (nombre, precio, idCategoria)
-VALUES	("Milanesa a caballo", 13500, 3),
-        ("Cerveza Corona", 4200, 2),
-        ("Papas fritas", 5000, 3);
+VALUES	("Milanesa a caballo", 13500, 3, 1),
+        ("Cerveza Corona", 4200, 2, 1),
+        ("Papas fritas", 5000, 3, 1);
 
-INSERT INTO listaProductos (idPedido, idProducto, cantidad)
-VALUES	(2, 3, 1),
-        (2, 2, 1);
+INSERT INTO listaProductos (idPedido, idProducto)
+VALUES	(2, 3),
+        (2, 2);

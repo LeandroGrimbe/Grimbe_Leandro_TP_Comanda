@@ -3,15 +3,15 @@
 class Pedido
 {
     public $id;
-    public $idMesa;
+    public $nroMesa;
     public $precio;
     public $idEstadoProceso;
 
     public function crearPedido()
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO pedidos (idMesa, precio, idEstadoProceso) VALUES (:idMesa, :precio, :idEstadoProceso)");
-        $consulta->bindValue(':idMesa', $this->idMesa);
+        $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO pedidos (nroMesa, precio, idEstadoProceso) VALUES (:nroMesa, :precio, :idEstadoProceso)");
+        $consulta->bindValue(':nroMesa', $this->nroMesa);
         $consulta->bindValue(':precio', $this->precio);
         $consulta->bindValue(':idEstadoProceso', $this->idEstadoProceso);
         $consulta->execute();
@@ -31,7 +31,7 @@ class Pedido
     public static function obtenerPedido($pedido)
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("SELECT * FROM pedidos WHERE pedidos.id = :pedido");
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT * FROM pedidos WHERE id = :pedido");
         $consulta->bindValue(':pedido', $pedido, PDO::PARAM_INT);
         $consulta->execute();
 
@@ -42,9 +42,9 @@ class Pedido
     // {
     //     $objAccesoDato = AccesoDatos::obtenerInstancia();
     //     $consulta = $objAccesoDato->prepararConsulta("UPDATE pedidos SET pedido = :pedido, clave = :clave WHERE id = :id");
-    //     $consulta->bindValue(':pedido', $this->pedido, PDO::PARAM_STR);
-    //     $consulta->bindValue(':clave', $this->clave, PDO::PARAM_STR);
-    //     $consulta->bindValue(':id', $this->id, PDO::PARAM_INT);
+    //     $consulta->bindValue(':pedido', $, PDO::PARAM_STR);
+    //     $consulta->bindValue(':clave', $, PDO::PARAM_STR);
+    //     $consulta->bindValue(':id', $id, PDO::PARAM_INT);
     //     $consulta->execute();
     // }
 

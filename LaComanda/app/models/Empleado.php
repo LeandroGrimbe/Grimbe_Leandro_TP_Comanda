@@ -42,26 +42,24 @@ class Empleado
         return $consulta->fetchObject('Empleado');
     }
 
-    // public static function modificarEmpleado()
-    // {
-    //     $objAccesoDato = AccesoDatos::obtenerInstancia();
-    //     $consulta = $objAccesoDato->prepararConsulta("UPDATE empleados SET nombre = :nombre, idRol = :idRol, fechaAlta = :fechaAlta, fechaBaja = :fechaBaja, idEstado = :idEstado WHERE id = :id");
-    //     $consulta->bindValue(':nombre', $this->nombre, PDO::PARAM_STR);
-    //     $consulta->bindValue(':idRol', $this->idRol, PDO::PARAM_INT);
-    //     $consulta->bindValue(':fechaAlta', $this->fechaAlta, PDO::PARAM_STR);
-    //     $consulta->bindValue(':fechaBaja', $this->fechaBaja, PDO::PARAM_STR);
-    //     $consulta->bindValue(':idEstado', $this->idEstado, PDO::PARAM_INT);
-    //     $consulta->execute();
-    // }
+    public static function modificarEmpleado($id, $nombre, $idRol, $fechaAlta)
+    {
+        $objAccesoDato = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDato->prepararConsulta("UPDATE empleados SET nombre = :nombre, idRol = :idRol, fechaAlta = :fechaAlta WHERE id = :id");
+        $consulta->bindValue(':nombre', $nombre, PDO::PARAM_STR);
+        $consulta->bindValue(':idRol', $idRol, PDO::PARAM_INT);
+        $consulta->bindValue(':fechaAlta', $fechaAlta, PDO::PARAM_STR);
+        $consulta->bindValue(':id', $id, PDO::PARAM_INT);
+        $consulta->execute();
+    }
 
-    // public static function borrarEmpleado($idEmpleado)
-    // {
-    //     $objAccesoDato = AccesoDatos::obtenerInstancia();
-    //     $consulta = $objAccesoDato->prepararConsulta("UPDATE empleados SET fechaBaja = :fechaBaja, idEstado = :idEstado WHERE id = :id");
-    //     $fecha = new DateTime(date("Y-m-d"));
-    //     $consulta->bindValue(':id', $idEmpleado, PDO::PARAM_INT);
-    //     $consulta->bindValue(':fechaBaja', $fecha);
-    //     $consulta->bindValue(':idEstado', 2);
-    //     $consulta->execute();
-    // }
+    public static function borrarEmpleado($idEmpleado)
+    {
+        $objAccesoDato = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDato->prepararConsulta("UPDATE empleados SET fechaBaja = :fechaBaja, idEstado = 2 WHERE id = :id");
+        $fecha = date("Y-m-d");
+        $consulta->bindValue(':id', $idEmpleado, PDO::PARAM_INT);
+        $consulta->bindValue(':fechaBaja', $fecha);
+        $consulta->execute();
+    }
 }
