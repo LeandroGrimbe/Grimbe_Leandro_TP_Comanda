@@ -3,17 +3,19 @@
 class Empleado
 {
     public $id;
-    public $nombre;
+    public $usuario;
+    public $clave;
     public $idRol;
     public $fechaAlta;
     public $fechaBaja;
     public $idEstado;
 
-    public function crearEmpleado()
+    public function CrearEmpleado()
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO empleados (nombre, idRol, fechaAlta, fechaBaja, idEstado) VALUES (:nombre, :idRol, :fechaAlta, :fechaBaja, :idEstado);");
-        $consulta->bindValue(':nombre', $this->nombre, PDO::PARAM_STR);
+        $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO empleados (usuario, clave, idRol, fechaAlta, fechaBaja, idEstado) VALUES (:usuario, :clave, :idRol, :fechaAlta, :fechaBaja, :idEstado);");
+        $consulta->bindValue(':usuario', $this->usuario);
+        $consulta->bindValue(':clave', $this->clave);
         $consulta->bindValue(':idRol', $this->idRol, PDO::PARAM_INT);
         $consulta->bindValue(':fechaAlta', $this->fechaAlta);
         $consulta->bindValue(':fechaBaja', $this->fechaBaja);
@@ -23,7 +25,7 @@ class Empleado
         return $objAccesoDatos->obtenerUltimoId();
     }
 
-    public static function obtenerTodos()
+    public static function ObtenerTodos()
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
         $consulta = $objAccesoDatos->prepararConsulta("SELECT * FROM empleados");
@@ -32,34 +34,45 @@ class Empleado
         return $consulta->fetchAll(PDO::FETCH_CLASS, 'Empleado');
     }
 
-    public static function obtenerEmpleado($nombreEmpleado)
+    public static function ObtenerUno($id)
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("SELECT * FROM empleados WHERE  empleados.nombre = :nombre;");
-        $consulta->bindValue(':nombre', $nombreEmpleado, PDO::PARAM_STR);
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT * FROM empleados WHERE id = :id;");
+        $consulta->bindValue(':id', $id, PDO::PARAM_INT);
         $consulta->execute();
 
         return $consulta->fetchObject('Empleado');
     }
 
-    public static function modificarEmpleado($id, $nombre, $idRol, $fechaAlta)
+    public static function Modificar($id, $usuario, $clave, $idRol, $fechaAlta)
     {
         $objAccesoDato = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDato->prepararConsulta("UPDATE empleados SET nombre = :nombre, idRol = :idRol, fechaAlta = :fechaAlta WHERE id = :id");
-        $consulta->bindValue(':nombre', $nombre, PDO::PARAM_STR);
+        $consulta = $objAccesoDato->prepararConsulta("UPDATE empleados SET usuario = :usuario, clave = :clave, idRol = :idRol, fechaAlta = :fechaAlta WHERE id = :id");
+        $consulta->bindValue(':usuario', $usuario);
+        $consulta->bindValue(':clave', $clave);
         $consulta->bindValue(':idRol', $idRol, PDO::PARAM_INT);
-        $consulta->bindValue(':fechaAlta', $fechaAlta, PDO::PARAM_STR);
+        $consulta->bindValue(':fechaAlta', $fechaAlta);
         $consulta->bindValue(':id', $id, PDO::PARAM_INT);
         $consulta->execute();
     }
 
-    public static function borrarEmpleado($idEmpleado)
+    public static function Borrar($id)
     {
         $objAccesoDato = AccesoDatos::obtenerInstancia();
         $consulta = $objAccesoDato->prepararConsulta("UPDATE empleados SET fechaBaja = :fechaBaja, idEstado = 2 WHERE id = :id");
-        $fecha = date("Y-m-d");
-        $consulta->bindValue(':id', $idEmpleado, PDO::PARAM_INT);
-        $consulta->bindValue(':fechaBaja', $fecha);
+        $consulta->bindValue(':id', $id, PDO::PARAM_INT);
+        $consulta->bindValue(':fechaBaja', date("Y-m-d"));
         $consulta->execute();
+    }
+
+    public static function IniciarSesion($usuario, $clave)
+    {
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT * FROM empleados WHERE  usuario = :usuario AND clave = :clave;");
+        $consulta->bindValue(':usuario', $usuario);
+        $consulta->bindValue(':clave', $clave);
+        $consulta->execute();
+
+        return $consulta->fetchObject('Empleado');
     }
 }
