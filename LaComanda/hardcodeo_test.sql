@@ -109,12 +109,23 @@ CREATE TABLE listaProductosPedido (
     FOREIGN KEY(idEstadoPedido) REFERENCES estadosPedido(id)
 );
 
+CREATE TABLE encuestas (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nroMesa INT(5),
+    puntuacionMesa INT(2),
+    puntuacionRestaurante INT(2),
+    puntuacionMozo INT(2),
+    puntuacionCocinero INT(2),
+    comentarios TEXT,
+    fecha DATE
+);
+
 INSERT INTO empleados (usuario, clave, idRol, fechaAlta, fechaBaja, idEstado)
 VALUES	("jose", 1111, 1, "2024-10-29", "", 1),
 		("ivan", 2222, 2, "2024-10-15", "", 1),
         ("leandro", 3333, 3, "2024-10-22", "", 1),
         ("pedro", 4444, 4, "2024-10-22", "", 1),
-        ("francisco", 5555, 5, "2024-10-22", "", 1);
+        ("franco", 5555, 5, "2024-10-22", "", 1);
 
 INSERT INTO productos (nombre, precio, idCategoria, idEstado)
 VALUES	("Milanesa a caballo", 13500, 3, 1),

@@ -99,4 +99,27 @@ class Mesa
         $consulta->bindValue(':nroMesa', $nroMesa);
         $consulta->execute();
     }
+
+    public function NuevaEncuesta($nroMesa, $puntuacionMesa, $puntuacionRestaurante, $puntuacionMozo, $puntuacionCocinero, $comentarios, $fecha)
+    {
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO encuestas (nroMesa, puntuacionMesa, puntuacionRestaurante, puntuacionMozo, puntuacionCocinero, comentarios, fecha) VALUES (:nroMesa, :puntuacionMesa, :puntuacionRestaurante, :puntuacionMozo, :puntuacionCocinero, :comentarios, :fecha)");
+        $consulta->bindValue(':nroMesa', $nroMesa);
+        $consulta->bindValue(':puntuacionMesa', $puntuacionMesa);
+        $consulta->bindValue(':puntuacionRestaurante', $puntuacionRestaurante);
+        $consulta->bindValue(':puntuacionMozo', $puntuacionMozo);
+        $consulta->bindValue(':puntuacionCocinero', $puntuacionCocinero);
+        $consulta->bindValue(':comentarios', $comentarios);
+        $consulta->bindValue(':fecha', $fecha);
+        $consulta->execute();
+    }
+
+    public static function ObtenerEncuestas()
+    {
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT * FROM encuestas");
+        $consulta->execute();
+
+        return $consulta->fetchAll(PDO::FETCH_CLASS);
+    }
 }

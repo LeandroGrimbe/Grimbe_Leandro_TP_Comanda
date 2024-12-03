@@ -36,7 +36,6 @@ class AutentificadorJWT
         }
     }
 
-
     public static function ObtenerPayLoad($token)
     {
         if (empty($token)) {

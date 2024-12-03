@@ -11,6 +11,7 @@
          "http-interop/http-factory-guzzle": "^1.0",
          "laminas/laminas-diactoros": "^2.8",
          "vlucas/phpdotenv": "^5.3",
-        "dompdf/dompdf": "^3.0"
+        "dompdf/dompdf": "^3.0",
+        "tecnickcom/tcpdf": "^6.7"
      }
  }

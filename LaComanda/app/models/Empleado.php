@@ -68,7 +68,7 @@ class Empleado
     public static function IniciarSesion($usuario, $clave)
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("SELECT * FROM empleados WHERE  usuario = :usuario AND clave = :clave;");
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT * FROM empleados WHERE  usuario = :usuario AND clave = :clave AND idEstado = 1;");
         $consulta->bindValue(':usuario', $usuario);
         $consulta->bindValue(':clave', $clave);
         $consulta->execute();

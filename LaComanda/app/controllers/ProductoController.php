@@ -1,5 +1,6 @@
 <?php
 require_once './models/Producto.php';
+require_once './controllers/EmpleadoController.php';
 
 class ProductoController extends Producto
 {
@@ -26,132 +27,42 @@ class ProductoController extends Producto
       ->withHeader('Content-Type', 'application/json');
   }
 
-  // public function TraerProducto($request, $response, $args)
-  // {
-  //   $id = $args['id'];
-  //   $producto = Producto::ObtenerUno($id);
-  //   if($producto)
-  //   {
-  //     $payload = json_encode($producto);
-  //   }
-  //   else
-  //   {
-  //     $payload = json_encode(array("error" => "Producto no encontrado"));
-  //   }
-
-  //   $response->getBody()->write($payload);
-  //   return $response
-  //     ->withHeader('Content-Type', 'application/json');
-  // }
-
-  // public function TraerTodos($request, $response, $args)
-  // {
-  //   $lista = Producto::ObtenerTodos();
-  //   if($lista)
-  //   {
-  //     $payload = json_encode(array("listaProductos" => $lista));
-  //   }
-  //   else
-  //   {
-  //     $payload = json_encode(array("error" => "No hay productos registrados"));
-  //   }
-
-  //   $response->getBody()->write($payload);
-  //   return $response
-  //     ->withHeader('Content-Type', 'application/json');
-  // }
-  
-  // public function ModificarProducto($request, $response, $args)
-  // {
-  //   $parametros = $request->getParsedBody();
-
-  //   $id = $parametros['id'];
-  //   $nombre = $parametros['nombre'];
-  //   $precio = $parametros['precio'];
-  //   $idCategoria = $parametros['idCategoria'];
-
-  //   if(Producto::ObtenerUno($id)) 
-  //   {
-  //     Producto::Modificar($id, $nombre, $precio, $idCategoria);
-  //     $payload = json_encode(array("mensaje" => "Producto modificado con exito"));
-  //   } 
-  //   else
-  //   {
-  //     $payload = json_encode(array("error" => "No se encontro el id, no se realizaron cambios"));
-  //   }
-
-  //   $response->getBody()->write($payload);
-  //   return $response
-  //     ->withHeader('Content-Type', 'application/json');
-  // }
-
-  // public function BorrarProducto($request, $response, $args)
-  // {
-  //   $parametros = $request->getParsedBody();
-
-  //   $id = $parametros['id'];
-
-  //   if(Producto::ObtenerUno($id)) 
-  //   {
-  //     Producto::Borrar($id);
-  //     $payload = json_encode(array("mensaje" => "Producto borrado con exito"));
-  //   } 
-  //   else
-  //   {
-  //     $payload = json_encode(array("error" => "No se encontro el id, no se realizaron cambios"));
-  //   }
-
-  //   $response->getBody()->write($payload);
-  //   return $response
-  //     ->withHeader('Content-Type', 'application/json');
-  // }
-
-  public static function VerificarProducto($idProducto)
+  public function TraerTodos($request, $response, $args)
   {
-    return Producto::ObtenerUno($idProducto);
-  }
+    $lista = Producto::ObtenerTodos();
 
-  public static function CalcularPrecio($listaIdsProductos)
-  {
-    $precioTotal = 0;
-    foreach($listaIdsProductos as $idProducto)
-    {
-      $precioTotal += Producto::ObtenerPrecio($idProducto);
-    }
+    $header = $request->getHeaderLine('Authorization');
+    $token = trim(explode("Bearer", $header)[1]);
+    EmpleadoController::RegistroLog($token, "Listar productos");
 
-    return $precioTotal;
-  }
-
-  public static function TraerListaCsv($request, $response, $args)
-  {
-    $listaProductos = Producto::ObtenerTodos();
-
-    $archivo = fopen("./ListadosCsv/productosExistentes.csv", "a");
-    foreach($listaProductos as $producto)
-    {
-      $datosAGuardar = "\n" . $producto->nombre . "," . $producto->precio . "," . $producto->idCategoria . "," . $producto->idEstado;
-    }
-
-    $datosAGuardar .= "\n";
-
-    $escritura = fwrite($archivo, $datosAGuardar);
-    
-    fclose($archivo);
-
-    if($escritura > 0)
-    {
-      $payload = json_encode(array("mensaje" => "Lista de productos descargada con exito"));
-    }
-    else
-    {
-      $payload = json_encode(array("mensaje" => "Hubo errores al guardar los datos, no se realizaron cambios"));
-    }
+    $payload = json_encode(array("listaProductos" => $lista), JSON_PRETTY_PRINT);
 
     $response->getBody()->write($payload);
     return $response
       ->withHeader('Content-Type', 'application/json');
   }
 
+  public function TraerListaCsv($request, $response, $args)
+  {
+    $listaProductos = Producto::ObtenerTodos();
+
+    $datosAGuardar = "";
+    foreach($listaProductos as $producto)
+    {
+      $datosAGuardar .= $producto->nombre . "," . $producto->precio . "," . $producto->idCategoria . "," . $producto->idEstado . "\n";
+    }
+
+    $header = $request->getHeaderLine('Authorization');
+    $token = trim(explode("Bearer", $header)[1]);
+    EmpleadoController::RegistroLog($token, "Traer csv productos");
+
+    $response->getBody()->write($datosAGuardar);
+    $response = $response->withHeader('Content-Type', 'text/csv')
+                         ->withHeader('Content-Disposition', 'attachment; filename="archivo.csv"')
+                         ->withHeader('Content-Length', strlen($datosAGuardar));
+    return $response;
+  }
+  
   public function CargarListaCsv($request, $response, $args)
   {
     $pathListados = "./ListadosCsv/";
@@ -180,6 +91,10 @@ class ProductoController extends Producto
       fclose($archivo);
 
       $payload = json_encode(array("mensaje" => "Lista de productos cargada con exito"));
+
+      $header = $request->getHeaderLine('Authorization');
+      $token = trim(explode("Bearer", $header)[1]);
+      EmpleadoController::RegistroLog($token, "Cargar csv productos");
     }
     else
     {
@@ -191,12 +106,54 @@ class ProductoController extends Producto
       ->withHeader('Content-Type', 'application/json');
   }
 
+  public function ListadoProductosPedido($request, $response, $args)
+  {
+    $lista = Producto::ObtenerListadoCompleto();
+    if($lista)
+    {
+      $payload = json_encode(array("listadoProductosPedido" => $lista), JSON_PRETTY_PRINT);
+
+      $header = $request->getHeaderLine('Authorization');
+      $token = trim(explode("Bearer", $header)[1]);
+      EmpleadoController::RegistroLog($token, "Listar platos pedidos");
+    }
+    else
+    {
+      $payload = json_encode(array("error" => "No hay pedidos registrados"));
+    }
+    
+    $response->getBody()->write($payload);
+    return $response
+      ->withHeader('Content-Type', 'application/json');
+  }
+
+  public static function VerificarProducto($idProducto)
+  {
+    return Producto::ObtenerUno($idProducto);
+  }
+
+  public static function CalcularPrecio($listaIdsProductos)
+  {
+    $precioTotal = 0;
+    foreach($listaIdsProductos as $idProducto)
+    {
+      $precioTotal += Producto::ObtenerPrecio($idProducto);
+    }
+
+    return $precioTotal;
+  }
+
   public static function NuevaLista($idPedido, $listaIdsProductos)
   {
     foreach($listaIdsProductos as $idProducto)
     {
       Producto::CargaProductoPedido($idPedido, $idProducto, 1);
     }
+  }
+
+  public static function BuscarProductoPedido($idPlato)
+  {
+    return Producto::ObtenerProductoPedido($idPlato);
   }
 
   public static function ModificarListaPedido($idPedido, $listaIdsProductos, $tiemposPrepProductos, $idsEstadosProducto)
@@ -261,6 +218,12 @@ class ProductoController extends Producto
     $tiempoMax = 0;
     foreach($listaPedido as $productoPedido)
     {
+      if($productoPedido->tiempoPreparacion == "0000-00-00 00:00:00")
+      {
+        $tiempoMax = "0000-00-00 00:00:00";
+        break;
+      }
+
       if($tiempoMax < $productoPedido->tiempoPreparacion)
       {
         $tiempoMax = $productoPedido->tiempoPreparacion;
@@ -270,36 +233,40 @@ class ProductoController extends Producto
     return $tiempoMax;
   }
   
-  public static function ListadoCompleto($request, $response, $args)
-  {
-    $lista = Producto::ObtenerListadoCompleto();
-    if($lista)
-    {
-      $payload = json_encode(array("listaPedidos" => $lista));
-    }
-    else
-    {
-      $payload = json_encode(array("error" => "No hay pedidos registrados"));
-    }
-    
-    $response->getBody()->write($payload);
-    return $response
-      ->withHeader('Content-Type', 'application/json');
-  }
-  
   public static function FinalizarProductoPedido($id)
   {
     Producto::FinalizarPreparacion($id);
   }
 
-  public static function RevisarEstado($id)
+  public static function RevisarEstadoPlatos($idPedido)
   {
-    $estado = "no listo";
-    if(Producto::ObtenerEstadoPedido($id) == 3)
+    $mensaje = "Listo";
+    $platosPedido = Producto::ObtenerProductosPedido($idPedido);
+    foreach($platosPedido as $plato)
     {
-      $estado = "listo";
+      if($plato->idEstadoPedido != 3)
+      {
+        if($plato->idEstadoPedido == 4)
+        {
+          $mensaje = "Ya entregado";
+          break;
+        }
+        else if($plato->idEstadoPedido == 5)
+        {
+          $mensaje = "Cancelado";
+          break;
+        }
+        
+        $mensaje = "No listo";
+        break;
+      }
     }
-    
-    return $estado;
+
+    return $mensaje;
+  }
+  
+  public static function CambiarEstadoPlatos($idEstado, $idPedido)
+  {
+    Producto::ActualizarEstadoPlatos($idEstado, $idPedido);
   }
 }

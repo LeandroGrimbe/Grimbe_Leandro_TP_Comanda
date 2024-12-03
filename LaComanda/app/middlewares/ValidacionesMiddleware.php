@@ -4,6 +4,7 @@ use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\Psr7\Response;
 
 require_once './controllers/MesaController.php';
+require_once './controllers/ProductoController.php';
 require_once './utils/AutentificadorJWT.php';
 
 class ValidacionesMiddleware
@@ -20,6 +21,35 @@ class ValidacionesMiddleware
     {
       $response = new Response();
       $payload = json_encode(array('mensaje' => 'Se requiere del usuario y clave para iniciar sesion. Reintente..'));
+      $response->getBody()->write($payload);
+    }
+
+    return $response->withHeader('Content-Type', 'application/json');
+  }
+
+  public function Token(Request $request, RequestHandler $handler): Response
+  {   
+    $header = $request->getHeaderLine('Authorization');
+    
+    if($header)
+    {
+      $token = trim(explode("Bearer", $header)[1]);
+      //try 
+      //{
+        AutentificadorJWT::VerificarToken($token);
+        $response = $handler->handle($request);
+      // } 
+      // catch (Exception $e) 
+      // {
+      //   $response = new Response();
+      //   $payload = json_encode(array('error' => "Hubo un error con el token, reingrese o inicie sesion nuevamente"));
+      //   $response->getBody()->write($payload);
+      // }
+    }
+    else
+    {
+      $response = new Response();
+      $payload = json_encode(array('error' => 'No estas logueado, inicia sesion antes de realizar cualquier accion'));
       $response->getBody()->write($payload);
     }
 
@@ -106,14 +136,22 @@ class ValidacionesMiddleware
   public function DatosFotoMesa(Request $request, RequestHandler $handler): Response
   {
     $datosValidos = false;
+    $mensaje = "";
     if(isset($_FILES["ImagenMesa"]["tmp_name"]) && is_uploaded_file($_FILES["ImagenMesa"]["tmp_name"]))
     {
       $parametros = $request->getQueryParams();
-      $nroMesa = $parametros['nroMesa'];
-      if(is_numeric($nroMesa) && MesaController::BuscarMesaPorNro($nroMesa))
+      if(isset($parametros['nroMesa']) && is_numeric($parametros['nroMesa']) && MesaController::BuscarMesaPorNro($parametros['nroMesa']))
       {
         $datosValidos = true;
       }
+      else
+      {
+        $mensaje = "Nro de mesa invalido o inexistente, no se realizaron cambios..";
+      }
+    }
+    else
+    {
+      $mensaje = "Imagen no cargada, no se realizaron cambios..";
     }
     
     if($datosValidos)
@@ -123,39 +161,216 @@ class ValidacionesMiddleware
     else
     {
       $response = new Response();
-      $payload = json_encode(array('mensaje' => 'Hubo errores al subir la foto del cliente. No se realizaron cambios..'));
+      $payload = json_encode(array('mensaje' => $mensaje));
       $response->getBody()->write($payload);
     }
 
     return $response->withHeader('Content-Type', 'application/json');
   }
 
-  public function Token(Request $request, RequestHandler $handler): Response
-  {   
+  public function DatosPreparacion(Request $request, RequestHandler $handler): Response
+  {
+    $parametros = $request->getParsedBody();
     $header = $request->getHeaderLine('Authorization');
-    
-    if($header)
+
+    $falla = true;
+    $mensaje = "";
+    if (isset($parametros["idPlato"]) && isset($parametros["tiempoPreparacion"]))
     {
-      $token = trim(explode("Bearer", $header)[1]);
-      //try {
-          AutentificadorJWT::VerificarToken($token);
-          $response = $handler->handle($request);
-      //} catch (Exception $e) {
-      //    $response = new Response();
-      //    $payload = json_encode(array('error' => $e)); //'Hubo un error con el token, reingrese o inicie sesion nuevamente..'
-      //    $response->getBody()->write($payload);
-      //}
+      $tiempoPreparacion = explode("-", $parametros["tiempoPreparacion"]);
+      if(checkdate((int)$tiempoPreparacion[1], (int)$tiempoPreparacion[2], (int)$tiempoPreparacion[0]) && is_numeric($parametros["idPlato"])) //fecha: AAAA-MM-DD HH:MM
+      {
+        $plato = ProductoController::BuscarProductoPedido($parametros["idPlato"]);
+        if($plato && $plato->idEstadoPedido == 1)
+        {
+          $token = trim(explode("Bearer", $header)[1]);
+          $dataEmpleado = AutentificadorJWT::ObtenerData($token);
+
+          if(($dataEmpleado->idRol == $plato->idCategoria && $dataEmpleado->idRol < 4) || ($dataEmpleado->idRol == 3 && $plato->idCategoria == 4))
+          {
+            $response = $handler->handle($request);
+            $falla = false;
+          }
+          else
+          {
+            $mensajeError = "No estas autorizado a realizar esta accion. Revisar";
+          }
+        }
+        else
+        {
+          $mensajeError = "Plato inexistente o ya procesado. Revisar";
+        }
+      }
+      else
+      {
+        $mensajeError = "Datos invalidos para la peticion a realizar. Revisar";
+      }
+    } 
+    else 
+    {
+      $mensajeError = "Datos faltantes para la peticion a realizar. Revisar";
+    }
+
+    if($falla)
+    {
+      $response = new Response();
+      $payload = json_encode(array('mensaje' => $mensajeError));
+      $response->getBody()->write($payload);
+    }
+
+    return $response->withHeader('Content-Type', 'application/json');
+  }
+
+  public function DatosConsultaTiempo(Request $request, RequestHandler $handler): Response
+  {
+    $datosValidos = false;
+    $mensaje = "";
+    $parametros = $request->getQueryParams();
+    if(isset($parametros['idPedido']) && isset($parametros['nroMesa']) && is_numeric($parametros['nroMesa']) && MesaController::BuscarMesaPorNro($parametros['nroMesa']) && PedidoController::BuscarPedido($parametros['idPedido']))
+    {
+      $idPedido = $parametros['idPedido'];
+      $mesa = MesaController::BuscarMesaPorNro($parametros['nroMesa']);
+
+      if(PedidoController::VerificarPedidoMesa($idPedido, $mesa->id))
+      {
+        $datosValidos = true;
+      }
+      else
+      {
+        $mensaje = "El nro de pedido no corresponde a la mesa ingresada. Reintente";
+      }
+    }
+    else
+    {
+      $mensaje = "Datos invalidos o inexistentes. Reintente..";
+    }
+    
+    if($datosValidos)
+    {
+      $response = $handler->handle($request);
     }
     else
     {
       $response = new Response();
-      $payload = json_encode(array('error' => 'No estas logueado, inicia sesion antes de realizar cualquier accion'));
+      $payload = json_encode(array('mensaje' => $mensaje));
       $response->getBody()->write($payload);
     }
 
     return $response->withHeader('Content-Type', 'application/json');
   }
 
+  public function DatosFinalizacion(Request $request, RequestHandler $handler): Response
+  {
+    $parametros = $request->getParsedBody();
+    $header = $request->getHeaderLine('Authorization');
+
+    $falla = true;
+    $mensaje = "";
+    if (isset($parametros["idPlato"]) && is_numeric($parametros["idPlato"]))
+    {
+      $plato = ProductoController::BuscarProductoPedido($parametros["idPlato"]);
+      if($plato && $plato->idEstadoPedido == 2)
+      {
+        $token = trim(explode("Bearer", $header)[1]);
+        $dataEmpleado = AutentificadorJWT::ObtenerData($token);
+
+        if(($dataEmpleado->idRol == $plato->idCategoria && $dataEmpleado->idRol < 4) || ($dataEmpleado->idRol == 3 && $plato->idCategoria == 4))
+        {
+          $response = $handler->handle($request);
+          $falla = false;
+        }
+        else
+        {
+          $mensajeError = "No estas autorizado a realizar esta accion. Revisar";
+        }
+      }
+      else
+      {
+        $mensajeError = "Plato inexistente, sin iniciar, o ya entregado. Revisar";
+      }
+    } 
+    else 
+    {
+      $mensajeError = "Datos invalidos para la peticion a realizar. Revisar";
+    }
+
+    if($falla)
+    {
+      $response = new Response();
+      $payload = json_encode(array('mensaje' => $mensajeError));
+      $response->getBody()->write($payload);
+    }
+
+    return $response->withHeader('Content-Type', 'application/json');
+  }
+
+  public function DatosEntrega(Request $request, RequestHandler $handler): Response
+  {
+    $datosValidos = false;
+    $mensaje = "";
+    $parametros = $request->getParsedBody();
+    if(isset($parametros['idPedido']) && isset($parametros['nroMesa']) && is_numeric($parametros['nroMesa']) && MesaController::BuscarMesaPorNro($parametros['nroMesa']) && PedidoController::BuscarPedido($parametros['idPedido']))
+    {
+      $idPedido = $parametros['idPedido'];
+      $mesa = MesaController::BuscarMesaPorNro($parametros['nroMesa']);
+
+      if(PedidoController::VerificarPedidoMesa($idPedido, $mesa->id))
+      {
+        $datosValidos = true;
+      }
+      else
+      {
+        $mensaje = "El nro de pedido no corresponde a la mesa ingresada. Reintente";
+      }
+    }
+    else
+    {
+      $mensaje = "Datos invalidos o inexistentes. Reintente..";
+    }
+    
+    if($datosValidos)
+    {
+      $response = $handler->handle($request);
+    }
+    else
+    {
+      $response = new Response();
+      $payload = json_encode(array('mensaje' => $mensaje));
+      $response->getBody()->write($payload);
+    }
+
+    return $response->withHeader('Content-Type', 'application/json');
+  }
+
+  public function DatosMesa(Request $request, RequestHandler $handler): Response
+  {
+    $datosValidos = false;
+    $parametros = $request->getQueryParams();
+    $nroMesa = $parametros["nroMesa"];
+    if(isset($nroMesa) && is_numeric($nroMesa) && MesaController::BuscarMesaPorNro($nroMesa))
+    {
+      $datosValidos = true;
+    }
+    else
+    {
+      $mensaje = "Nro de mesa invalido, inexistente, o ya cerrado, no se realizaron cambios..";
+    }
+    
+    if($datosValidos)
+    {
+      $response = $handler->handle($request);
+    }
+    else
+    {
+      $response = new Response();
+      $payload = json_encode(array('mensaje' => $mensaje));
+      $response->getBody()->write($payload);
+    }
+
+    return $response->withHeader('Content-Type', 'application/json');
+  }
+
+//Roles
   public function RolMozo(Request $request, RequestHandler $handler): Response
   {   
     $header = $request->getHeaderLine('Authorization');
@@ -256,5 +471,6 @@ class ValidacionesMiddleware
 
     return $response->withHeader('Content-Type', 'application/json');
   }
+//
 }
 

@@ -1,0 +1,51 @@
+2024-12-03 03:52:04		francisco           Logueo Exitoso
+2024-12-03 03:52:06		pedro           Logueo Exitoso
+2024-12-03 03:52:08		leandro			Logueo Exitoso
+2024-12-03 03:52:10		ivan			Logueo Exitoso
+2024-12-03 03:52:12		jose			Logueo Exitoso
+2024-12-03 03:53:57		jose			Logueo Exitoso
+2024-12-03 03:54:00		ivan			Logueo Exitoso
+2024-12-03 03:54:02		leandro			Logueo Exitoso
+2024-12-03 03:54:04		pedro			Logueo Exitoso
+2024-12-03 03:54:05		francisco			Logueo Exitoso
+2024-12-03 03:54:19		pedro			Ocupar Mesa nro 26675
+2024-12-03 03:55:53		pedro			Crear pedido nro 4
+2024-12-03 03:58:16		jose			Preparar plato nro 12
+2024-12-03 03:59:37		ivan			Preparar plato nro 11
+2024-12-03 04:00:14		leandro			Preparar plato nro 8
+2024-12-03 04:00:26		leandro			Preparar plato nro 9
+2024-12-03 04:00:32		leandro			Preparar plato nro 10
+2024-12-03 04:03:01		jose			Terminar plato nro 12
+2024-12-03 04:03:32		ivan			Terminar plato nro 11
+2024-12-03 04:04:04		leandro			Terminar plato nro 8
+2024-12-03 04:04:10		leandro			Terminar plato nro 9
+2024-12-03 04:04:14		leandro			Terminar plato nro 10
+2024-12-03 04:04:20		pedro			Entregar pedido nro 4
+2024-12-03 04:05:09		pedro			Cobrar Mesa nro 26675
+2024-12-03 04:06:00		francisco			Cerrar Mesa nro 26675
+2024-12-03 04:17:39		pedro			Ocupar Mesa nro 74065
+2024-12-03 04:17:44		pedro			Tomar foto mesa nro 74065
+2024-12-03 04:18:30		francisco			Listar platos pedidos
+2024-12-03 04:18:50		francisco			Listar productos
+2024-12-03 04:19:13		francisco			Listar Empleados
+2024-12-03 04:19:26		francisco			Listar Mesas
+2024-12-03 04:19:43		francisco			Mostrar mesa mas usada
+2024-12-03 04:25:00		jose			Consultar pendientes barra
+2024-12-03 04:29:00		jose			Consultar pendientes barra
+2024-12-03 04:29:30		ivan			Consultar pendientes Cerv
+2024-12-03 04:29:54		leandro			Consultar pendientes cocina
+2024-12-03 04:31:04		francisco			Cargar csv productos
+2024-12-03 04:31:20		francisco			Traer csv productos
+2024-12-03 04:31:29		francisco			Traer csv productos
+2024-12-03 04:31:47		francisco			Descargar PDF
+2024-12-03 04:32:07		francisco			Descargar PDF
+2024-12-03 04:32:12		francisco			Descargar PDF
+2024-12-03 04:32:28		francisco			Descargar PDF
+2024-12-03 04:33:01		francisco			Descargar PDF
+2024-12-03 05:00:47		francisco			Mostrar estadisticas de clientes a 30 dias
+2024-12-03 05:01:53		francisco			Mostrar estadisticas de clientes a 30 dias
+2024-12-03 05:04:16		francisco			Mostrar estadisticas de clientes a 30 dias
+2024-12-03 05:10:14		francisco			Inhabilitar Empleado nro 1
+2024-12-03 05:10:30		jose			Logueo Exitoso
+2024-12-03 05:10:32		jose			Logueo Exitoso
+2024-12-03 05:10:33		jose			Logueo Exitoso

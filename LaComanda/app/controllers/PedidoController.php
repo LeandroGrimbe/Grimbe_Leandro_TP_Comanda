@@ -2,6 +2,7 @@
 require_once './models/Pedido.php';
 require_once './controllers/ProductoController.php';
 require_once './controllers/MesaController.php';
+require_once './controllers/EmpleadoController.php';
 
 class PedidoController extends Pedido
 {
@@ -23,6 +24,10 @@ class PedidoController extends Pedido
 
     ProductoController::NuevaLista($id, $listaIdsProductos);
 
+    $header = $request->getHeaderLine('Authorization');
+    $token = trim(explode("Bearer", $header)[1]);
+    EmpleadoController::RegistroLog($token, "Crear pedido nro " . $id);
+
     $payload = json_encode(array("mensaje" => "Pedido creado con exito"));
 
     $response->getBody()->write($payload);
@@ -30,125 +35,17 @@ class PedidoController extends Pedido
       ->withHeader('Content-Type', 'application/json');
   }
 
-  // public function TraerPedido($request, $response, $args)
-  // {
-  //   $id = $args['id'];
-  //   $pedido = Pedido::ObtenerUno($id);
-  //   if($pedido)
-  //   {
-  //     $payload = json_encode($pedido);
-  //   }
-  //   else
-  //   {
-  //     $payload = json_encode(array("error" => "Pedido no encontrado"));
-  //   }
-
-  //   $response->getBody()->write($payload);
-  //   return $response
-  //     ->withHeader('Content-Type', 'application/json');
-  // }
-
-  public function TraerTodos($request, $response, $args)
-  {
-    $lista = Pedido::ObtenerTodos();
-    if($lista)
-    {
-      $listadoPedidos = [];
-      foreach($lista as $pedido)
-      {
-        $pedidoAux = new StdClass();
-        $pedidoAux->id = $pedido->id;
-        $pedidoAux->idMesa = $pedido->idMesa;
-
-        $fechaFinalizacion = ProductoController::TiempoRestante($pedido->id);
-        if($fechaFinalizacion == 0)
-        {
-          $pedidoAux->tiempoRestante = "No iniciado";
-        }
-        else
-        {
-          $fechaFinAux = new datetime($fechaFinalizacion);
-          $fechaAct = new datetime(date("Y-m-d H:i:s"));
-          $tiempoRestante = date_diff($fechaAct,$fechaFinAux);
-  
-          $pedidoAux->tiempoRestante = $tiempoRestante->format('%R%H Horas, %I minutos');
-        }
-        
-        $listadoPedidos[] = $pedidoAux;
-      }
-
-      $payload = json_encode(array("listaPedidos" => $listadoPedidos));
-    }
-    else
-    {
-      $payload = json_encode(array("error" => "No hay pedidos registrados"));
-    }
-    
-    $response->getBody()->write($payload);
-    return $response
-      ->withHeader('Content-Type', 'application/json');
-  }
-  
-  // public function ModificarPedido($request, $response, $args)
-  // {
-  //   $parametros = $request->getParsedBody();
-
-  //   $id = $parametros['id'];
-  //   $mesa = MesaController::BuscarMesaPorNro($parametros['nroMesa']);
-
-  //   $listaIdsProductos = $parametros['listaIdsProductos'];
-  //   $precio = ProductoController::CalcularPrecio($listaIdsProductos);
-
-  //   $idsEstadosProducto = $parametros['idsEstadosProducto'];
-  //   $tiemposPrepProductos = $parametros['tiemposPrepProductos'];
-
-  //   if(Pedido::ObtenerUno($id))
-  //   {
-  //     Pedido::Modificar($id, $mesa->id, $precio);
-  //     ProductoController::ModificarListaPedido($id, $listaIdsProductos, $tiemposPrepProductos, $idsEstadosProducto);
-
-  //     $payload = json_encode(array("mensaje" => "Pedido modificado con exito"));
-  //   } 
-  //   else
-  //   {
-  //     $payload = json_encode(array("error" => "No se encontro el id, no se realizaron cambios"));
-  //   }
-
-  //   $response->getBody()->write($payload);
-  //   return $response
-  //     ->withHeader('Content-Type', 'application/json');
-  // }
-
-  // public function BorrarPedido($request, $response, $args)
-  // {
-  //   $parametros = $request->getParsedBody();
-
-  //   $id = $parametros['id'];
-
-  //   if(Pedido::ObtenerUno($id))
-  //   {
-  //     Pedido::Borrar($id);
-  //     ProductoController::BorrarListaPedido($id);
-
-  //     $payload = json_encode(array("mensaje" => "Pedido borrado/cerrado con exito"));
-  //   } 
-  //   else
-  //   {
-  //     $payload = json_encode(array("error" => "No se encontro el id, no se realizaron cambios"));
-  //   }
-
-  //   $response->getBody()->write($payload);
-  //   return $response
-  //     ->withHeader('Content-Type', 'application/json');
-  // }
-
-  public function PedidosPendBarra($request, $response, $args)
+  public function PlatosPendBarra($request, $response, $args)
   {
     $idSector = 1; //barra tragos
     $lista = ProductoController::TraerListaPedidoPend($idSector);
     if($lista)
     {
-      $payload = json_encode(array("ProductosPendientesBarra" => $lista));
+      $payload = json_encode(array("ProductosPendientesBarra" => $lista), JSON_PRETTY_PRINT);
+
+      $header = $request->getHeaderLine('Authorization');
+      $token = trim(explode("Bearer", $header)[1]);
+      EmpleadoController::RegistroLog($token, "Consultar pendientes barra");
     }
     else
     {
@@ -160,13 +57,17 @@ class PedidoController extends Pedido
       ->withHeader('Content-Type', 'application/json');
   }
 
-  public function PedidosPendCerveceria($request, $response, $args)
+  public function PlatosPendCerveceria($request, $response, $args)
   {
     $idSector = 2; //barra cerveza
     $lista = ProductoController::TraerListaPedidoPend($idSector);
     if($lista)
     {
-      $payload = json_encode(array("ProductosPendientesCerveceria" => $lista));
+      $payload = json_encode(array("ProductosPendientesCerveceria" => $lista), JSON_PRETTY_PRINT);
+
+      $header = $request->getHeaderLine('Authorization');
+      $token = trim(explode("Bearer", $header)[1]);
+      EmpleadoController::RegistroLog($token, "Consultar pendientes Cerv");
     }
     else
     {
@@ -178,13 +79,17 @@ class PedidoController extends Pedido
       ->withHeader('Content-Type', 'application/json');
   }
 
-  public function PedidosPendCocina($request, $response, $args)
+  public function PlatosPendCocina($request, $response, $args)
   {
     $idSector = 3; //cocina
     $lista = ProductoController::TraerListaPedidoPend($idSector);
     if($lista)
     {
-      $payload = json_encode(array("ProductosPendientesCocina" => $lista));
+      $payload = json_encode(array("ProductosPendientesCocina" => $lista), JSON_PRETTY_PRINT);
+
+      $header = $request->getHeaderLine('Authorization');
+      $token = trim(explode("Bearer", $header)[1]);
+      EmpleadoController::RegistroLog($token, "Consultar pendientes cocina");
     }
     else
     {
@@ -196,13 +101,17 @@ class PedidoController extends Pedido
       ->withHeader('Content-Type', 'application/json');
   }
 
-  public function PedidosPendCandy($request, $response, $args)
+  public function PlatosPendCandy($request, $response, $args)
   {
     $idSector = 4; //candy bar
     $lista = ProductoController::TraerListaPedidoPend($idSector);
     if($lista)
     {
-      $payload = json_encode(array("ProductosPendientesCandy" => $lista));
+      $payload = json_encode(array("ProductosPendientesCandy" => $lista), JSON_PRETTY_PRINT);
+
+      $header = $request->getHeaderLine('Authorization');
+      $token = trim(explode("Bearer", $header)[1]);
+      EmpleadoController::RegistroLog($token, "Consultar pendientes candy");
     }
     else
     {
@@ -214,16 +123,20 @@ class PedidoController extends Pedido
       ->withHeader('Content-Type', 'application/json');
   }
   
-  public function PrepararPedido($request, $response, $args)
+  public function PrepararPlato($request, $response, $args)
   {
     $parametros = $request->getParsedBody();
 
-    $id = $parametros['id'];
+    $idPlato = $parametros['idPlato'];
     $tiempoPreparacion = $parametros['tiempoPreparacion'];
 
-    ProductoController::PrepararProductoPedido($id, $tiempoPreparacion);
+    ProductoController::PrepararProductoPedido($idPlato, $tiempoPreparacion);
 
-    $mensaje = "Pedido ya puesto en preparacion. Tiempo estimado de finalizacion: " . $tiempoPreparacion;
+    $header = $request->getHeaderLine('Authorization');
+    $token = trim(explode("Bearer", $header)[1]);
+    EmpleadoController::RegistroLog($token, "Preparar plato nro " . $idPlato);
+
+    $mensaje = "Plato/ Bebida ya puesto/ a en preparacion. Tiempo estimado de finalizacion: " . $tiempoPreparacion;
     $payload = json_encode(array("mensaje" => $mensaje));
     
     $response->getBody()->write($payload);
@@ -243,33 +156,48 @@ class PedidoController extends Pedido
     $fechaAct = new datetime(date("Y-m-d H:i:s"));
     $tiempoRestante = date_diff($fechaAct,$fechaFinAux);
 
-    $mensaje = "El pedido nro " . $idPedido . ", de la mesa " . $nroMesa . " estara listo en " . $tiempoRestante->format('%R%i minutos');
-    $payload = json_encode(array("mensaje" => $mensaje));
+    if($fechaAct >= $fechaFinalizacion && $fechaFinalizacion != "0000-00-00 00:00:00")
+    {
+      $mensaje = "El pedido nro " . $idPedido . ", de la mesa " . $nroMesa . " ya esta listo para servir";
+    }
+    else if ($fechaFinalizacion != "0000-00-00 00:00:00")
+    {
+      $mensaje = "El pedido nro " . $idPedido . ", de la mesa " . $nroMesa . " estara listo en " . $tiempoRestante->format('%R horas, %i minutos');
+    }
+    else
+    {
+      $mensaje = "El pedido nro " . $idPedido . ", de la mesa " . $nroMesa . " aun tiene elementos que no estan en preparacion.";
+    }
     
+    $payload = json_encode(array("mensaje" => $mensaje));
     $response->getBody()->write($payload);
     return $response
       ->withHeader('Content-Type', 'application/json');
   }
 
-  public function TerminarPedido($request, $response, $args)
+  public function TerminarPlato($request, $response, $args)
   {
     $parametros = $request->getParsedBody();
 
-    $id = $parametros['id'];
+    $idPlato = $parametros['idPlato'];
 
-    $fechaFinalizacion = ProductoController::TiempoRestanteProducto($id);
+    $fechaFinalizacion = ProductoController::TiempoRestanteProducto($idPlato);
     $fechaFinAux = new datetime($fechaFinalizacion);
     $fechaAct = new datetime(date("Y-m-d H:i:s"));
 
     if($fechaAct > $fechaFinalizacion)
     {
-      ProductoController::FinalizarProductoPedido($id);
+      ProductoController::FinalizarProductoPedido($idPlato);
 
-      $mensaje = "El producto ya listo para servir";
+      $mensaje = "El plato ya esta listo para servir";
+
+      $header = $request->getHeaderLine('Authorization');
+      $token = trim(explode("Bearer", $header)[1]);
+      EmpleadoController::RegistroLog($token, "Terminar plato nro " . $idPlato);
     }
     else
     {
-      $mensaje = "El pedido solicitado aun esta en preparacion..";
+      $mensaje = "El plato solicitado aun esta en preparacion..";
     }
 
     $payload = json_encode(array("mensaje" => $mensaje));
@@ -282,22 +210,69 @@ class PedidoController extends Pedido
   {
     $parametros = $request->getParsedBody();
 
-    $id = $parametros['id'];
+    $idPedido = $parametros['idPedido'];
     $nroMesa = $parametros['nroMesa'];
 
-    if(ProductoController::RevisarEstado($id) == "listo")
+    switch(ProductoController::RevisarEstadoPlatos($idPedido))
     {
-      $mensaje = "El pedido se ha entregado a la mesa";
-      MesaController::CambiarEstado(2, $nroMesa);
-    }
-    else
-    {
-      $mensaje = "El pedido solicitado aun esta en preparacion..";
+      case "Listo":
+        $mensaje = "El pedido nro " . $idPedido . " se ha entregado a la mesa " . $nroMesa . ". Clientes comiendo";
+        MesaController::CambiarEstado(2, $nroMesa);
+        ProductoController::CambiarEstadoPlatos(4, $idPedido);
+
+        $header = $request->getHeaderLine('Authorization');
+        $token = trim(explode("Bearer", $header)[1]);
+        EmpleadoController::RegistroLog($token, "Entregar pedido nro " . $idPedido);
+        break;
+      
+      case "No listo":
+        $mensaje = "El pedido nro " . $idPedido . " aun tiene platos en preparacion, aguarde por favor..";
+        break;
+      
+      case "Ya entregado":
+        $mensaje = "El pedido nro " . $idPedido . " ya fue entregado previamente.";
+        break;
+      
+      case "Cancelado":
+        $mensaje = "El pedido nro " . $idPedido . " fue cancelado";
+        break;
     }
 
     $payload = json_encode(array("mensaje" => $mensaje));
     $response->getBody()->write($payload);
     return $response
       ->withHeader('Content-Type', 'application/json');
+  }
+
+  public static function BuscarPedido($idPedido)
+  {
+    return Pedido::ObtenerUno($idPedido);
+  }
+  
+  public static function BuscarPedidosMesa($idMesa)
+  {
+    $listaPedidos = Pedido::ObtenerTodos();
+    $listaPedidosMesa = [];
+    foreach($listaPedidos as $pedido)
+    {
+      if($pedido->idMesa == $idMesa)
+      {
+        $listaPedidosMesa[] = $pedido;
+      }
+    }
+
+    return $listaPedidosMesa;
+  }
+
+  public static function VerificarPedidoMesa($idPedido, $idMesa)
+  {
+    $mesaCorrecta = false;
+    $pedido = Pedido::ObtenerUno($idPedido);
+    if($pedido->idMesa == $idMesa)
+    {
+      $mesaCorrecta = true;
+    }
+
+    return $mesaCorrecta;
   }
 }

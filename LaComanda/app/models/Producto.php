@@ -73,7 +73,7 @@ class Producto
     public static function CargaProductoPedido($idPedido, $idProducto, $idEstadoPedido)
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO listaProductosPedido (idPedido, idProducto, idEstadoPedido) VALUES (:idPedido, :idProducto, :idEstadoPedido)");
+        $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO listaProductosPedido (idPedido, idProducto, idEstadoPedido, tiempoPreparacion) VALUES (:idPedido, :idProducto, :idEstadoPedido, '')");
         $consulta->bindValue(':idPedido', $idPedido);
         $consulta->bindValue(':idProducto', $idProducto);
         $consulta->bindValue(':idEstadoPedido', $idEstadoPedido);
@@ -87,6 +87,16 @@ class Producto
         $consulta->execute();
 
         return $consulta->fetchAll(PDO::FETCH_CLASS);
+    }
+
+    public static function ObtenerProductoPedido($idPlato)
+    {
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT listaProductosPedido.id, productos.nombre, listaProductosPedido.idPedido, productos.idCategoria, listaProductosPedido.idEstadoPedido FROM listaProductosPedido JOIN productos WHERE productos.id = listaProductosPedido.idProducto AND listaProductosPedido.id = :idPlato");
+        $consulta->bindValue(':idPlato', $idPlato);
+        $consulta->execute();
+
+        return $consulta->fetchObject();
     }
 
     public static function ObtenerProductosPedido($idPedido)
@@ -110,7 +120,7 @@ class Producto
     public static function ObtenerListaPedidoPend($idCategoria)
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("SELECT listaProductosPedido.id, productos.nombre, listaProductosPedido.idPedido FROM listaProductosPedido JOIN productos WHERE productos.id = listaProductosPedido.idProducto AND productos.idCategoria = :idCategoria");
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT listaProductosPedido.id, productos.nombre, listaProductosPedido.idPedido FROM listaProductosPedido JOIN productos WHERE productos.id = listaProductosPedido.idProducto AND productos.idCategoria = :idCategoria AND listaProductosPedido.idEstadoPedido = 1");
         $consulta->bindValue(':idCategoria', $idCategoria);
         $consulta->execute();
 
@@ -145,14 +155,12 @@ class Producto
         $consulta->execute();
     }
 
-    public static function ObtenerEstadoPedido($id)
+    public static function ActualizarEstadoPlatos($idEstado, $idPedido)
     {
-        $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("SELECT idEstadoPedido FROM listaProductosPedido WHERE id = :id");
-        $consulta->bindValue(':id', $id);
+        $objAccesoDato = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDato->prepararConsulta("UPDATE listaProductosPedido SET idEstadoPedido = :idEstado WHERE idPedido = :idPedido");
+        $consulta->bindValue(':idEstado', $idEstado);
+        $consulta->bindValue(':idPedido', $idPedido);
         $consulta->execute();
-
-        $resultado = $consulta->fetch();
-        return $resultado["idEstadoPedido"];
     }
 }
